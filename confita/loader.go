@@ -51,5 +51,4 @@ func SetNewLoader(l Loader) func() {
 	return func() {
 		SetNewLoader(old)
 	}
-
 }
