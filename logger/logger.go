@@ -1,15 +1,33 @@
 package logger
 
 import (
-	"fmt"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"os"
 )
+
+func highPriorityLevelEnablerFunc(lvl zapcore.Level) bool {
+	return lvl >= zapcore.ErrorLevel
+}
+
+func lowPriorityLevelEnablerFunc(lvl zapcore.Level) bool {
+	return lvl < zapcore.ErrorLevel
+}
 
 // NewProduction creates production logger with provided options.
 func NewProduction(opts ...zap.Option) (*zap.Logger, error) {
-	logger, err := zap.NewProduction(opts...)
-	if err != nil {
-		return nil, fmt.Errorf("zap: NewProduction: %w", err)
-	}
+	highPriority := zap.LevelEnablerFunc(highPriorityLevelEnablerFunc)
+	lowPriority := zap.LevelEnablerFunc(lowPriorityLevelEnablerFunc)
+
+	consoleDebugging := zapcore.Lock(os.Stdout)
+	consoleErrors := zapcore.Lock(os.Stderr)
+	jsonEncoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+
+	core := zapcore.NewTee(
+		zapcore.NewCore(jsonEncoder, consoleErrors, highPriority),
+		zapcore.NewCore(jsonEncoder, consoleDebugging, lowPriority),
+	)
+	logger := zap.New(core, opts...)
+	zap.ReplaceGlobals(logger)
 	return logger, nil
 }
