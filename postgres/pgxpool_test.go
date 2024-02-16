@@ -1,4 +1,4 @@
-package pgxpool
+package postgres
 
 import (
 	"context"
@@ -29,14 +29,14 @@ func TestClient_P(t *testing.T) {
 func TestNew_Positive(t *testing.T) {
 	cfg := testCfg(t)
 	lc := fxtest.NewLifecycle(t)
-	cli, err := New(lc, cfg, zap.L())
+	cli, err := NewWithFx(lc, cfg, zap.L())
 	assert.NoError(t, err)
 	assert.NotNil(t, cli)
 }
 
 func TestNew_Negative_BadConfig(t *testing.T) {
 	lc := fxtest.NewLifecycle(t)
-	cli, err := New(lc, "bad uri", zap.L())
+	cli, err := NewWithFx(lc, "bad uri", zap.L())
 	assert.Nil(t, cli)
 	assert.Error(t, err)
 }
